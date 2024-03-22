@@ -28,7 +28,7 @@ public class User {
     /**
      * Path of the profile image file for the user.
      */
-    private final String profileImagePath;
+    public final String profileImagePath;
 
     /**
      * Constructs a User with specified details.

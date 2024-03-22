@@ -11,6 +11,7 @@ create table if not exists user (
     password varchar(255) not null,
     firstName varchar(255) not null,
     lastName varchar(255) not null,
+    profileImagePath varchar(255),
     primary key (userId),
     unique (username),
     constraint userName_min_length check (char_length(trim(userName)) >= 2),

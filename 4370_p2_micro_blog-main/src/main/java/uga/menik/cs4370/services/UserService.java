@@ -74,9 +74,10 @@ public class UserService {
                         String userId = rs.getString("userId");
                         String firstName = rs.getString("firstName");
                         String lastName = rs.getString("lastName");
+                        String profileImagePath = rs.getString("profileImagePath");
 
                         // Initialize and retain the logged in user.
-                        loggedInUser = new User(userId, firstName, lastName);
+                        loggedInUser = new User(userId, firstName, lastName, profileImagePath);
                     }
                     return isPassMatch;
                 }
@@ -129,6 +130,30 @@ public class UserService {
             int rowsAffected = registerStmt.executeUpdate();
             return rowsAffected > 0;
         }
+    }
+
+    public User getUserById(String id) {
+        User user = null;
+
+        final String sqlString = "select * from user where userId = " + id;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                while (rs.next()) {
+                    String userId = rs.getString("userId");
+                    String firstName = rs.getString("firstName");
+                    String lastName = rs.getString("lastName");
+                    user = new User(userId, firstName, lastName);
+                } // while
+                return user;
+            }
+
+        } catch (SQLException sqle) {
+            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+            return user;
+        } // try
     }
 
 }

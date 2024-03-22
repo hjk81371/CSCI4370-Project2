@@ -7,8 +7,13 @@ package uga.menik.cs4370.controllers;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.List;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.kafka.KafkaConnectionDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +21,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+
 import uga.menik.cs4370.models.Post;
+import uga.menik.cs4370.models.User;
+import uga.menik.cs4370.services.MakePostService;
+import uga.menik.cs4370.services.UserService;
 import uga.menik.cs4370.utility.Utility;
 
 /**
@@ -25,6 +34,15 @@ import uga.menik.cs4370.utility.Utility;
 @Controller
 @RequestMapping
 public class HomeController {
+
+    private final UserService userService;
+    private final MakePostService makePostService;
+
+    @Autowired
+    public HomeController(MakePostService makePostService, UserService userService) {
+        this.userService = userService;
+        this.makePostService = makePostService;
+    }
 
     /**
      * This is the specific function that handles the root URL itself.
@@ -68,8 +86,14 @@ public class HomeController {
     public String createPost(@RequestParam(name = "posttext") String postText) {
         System.out.println("User is creating post: " + postText);
 
-        // Redirect the user if the post creation is a success.
-        // return "redirect:/";
+        User currUser = userService.getLoggedInUser();
+
+        boolean success = makePostService.makePost(currUser, postText);
+        
+        if (success) {
+            return "redirect:/";
+        }
+
 
         // Redirect the user with an error message if there was an error.
         String message = URLEncoder.encode("Failed to create the post. Please try again.",

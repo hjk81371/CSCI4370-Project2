@@ -74,10 +74,9 @@ public class UserService {
                         String userId = rs.getString("userId");
                         String firstName = rs.getString("firstName");
                         String lastName = rs.getString("lastName");
-                        String profileImagePath = rs.getString("profileImagePath");
 
                         // Initialize and retain the logged in user.
-                        loggedInUser = new User(userId, firstName, lastName, profileImagePath);
+                        loggedInUser = new User(userId, firstName, lastName);
                     }
                     return isPassMatch;
                 }

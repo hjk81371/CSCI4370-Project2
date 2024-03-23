@@ -29,10 +29,12 @@ import uga.menik.cs4370.utility.Utility;
 public class PeopleService {
 
     private final DataSource dataSource;
+    private final UserService userService;
 
     @Autowired
-    public PeopleService(DataSource dataSource) {
+    public PeopleService(DataSource dataSource, UserService userService) {
         this.dataSource = dataSource;
+        this.userService = userService;
     }
     
 
@@ -56,13 +58,14 @@ public class PeopleService {
             try (ResultSet rs = pstmt.executeQuery()) {
 
                 while (rs.next()) {
-                    String currRowId = rs.getString("userId");
+                    String currUserId = rs.getString("userId");
                     // String currRowUsername = rs.getString("Username");
                     String currRowFirstName = rs.getString("firstName");
                     String currRowLastName = rs.getString("lastName");
+                    boolean isFollowed = getIsFollowed(userIdToExclude, currUserId);
                     // get Last Post time from user
                    
-                    FollowableUser currFollowableUser = new FollowableUser(currRowId, currRowFirstName, currRowLastName, false, "date");//"Mar 07, 2024, 10:54 PM"); //currPostDate); 
+                    FollowableUser currFollowableUser = new FollowableUser(currUserId, currRowFirstName, currRowLastName, isFollowed, "date");//"Mar 07, 2024, 10:54 PM"); //currPostDate); 
                     followableUserList.add(currFollowableUser);
                 } // while
 
@@ -81,5 +84,85 @@ public class PeopleService {
         // Replace the following line and return the list you created.
         return followableUserList;
     }
+
+    private boolean getIsFollowed(String currUserId, String otherUserId) {
+        final String sqlString = "select * from follow where followerUserId = ? and followeeUserId = ?";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+            pstmt.setString(1, currUserId);
+            pstmt.setString(2, otherUserId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                while (rs.next()) {
+                    return true;
+                } // while
+                return false;
+            }
+        } catch (SQLException sqle) {
+            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+            return false;
+        } // try
+    } // getIsFollowed
+
+    
+
+    public boolean handleFollow(String userId, boolean isFollow) {
+
+        String loggedInUserId = userService.getLoggedInUser().getUserId();
+
+        if (isFollow) {
+            // following the user
+
+            String sqlString = "insert into follow (followerUserId, followeeUserId) values (?, ?)";
+
+
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+                pstmt.setString(1, loggedInUserId);
+                pstmt.setString(2, userId);
+
+                int rowsChanged = pstmt.executeUpdate();
+
+                if (rowsChanged > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            } catch (SQLException sqle) {
+                System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+                return false;
+            } // try
+
+        } else {
+            // unfollowing the user
+
+            String sqlString = "delete from follow where followerUserId = ? and followeeUserId = ?";
+
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+                pstmt.setString(1, loggedInUserId);
+                pstmt.setString(2, userId);
+
+                int rowsChanged = pstmt.executeUpdate();
+
+                if (rowsChanged > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            } catch (SQLException sqle) {
+                System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+                return false;
+            } // try
+
+        } // if
+
+    } // handleFollow
 
 }

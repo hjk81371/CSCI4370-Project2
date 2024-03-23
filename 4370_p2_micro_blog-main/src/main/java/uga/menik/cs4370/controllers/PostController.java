@@ -9,6 +9,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import uga.menik.cs4370.models.ExpandedPost;
+import uga.menik.cs4370.services.MakePostService;
 import uga.menik.cs4370.utility.Utility;
 
 /**
@@ -26,6 +28,13 @@ import uga.menik.cs4370.utility.Utility;
 @Controller
 @RequestMapping("/post")
 public class PostController {
+
+    private final MakePostService makePostService;
+
+    @Autowired
+    public PostController(MakePostService makePostService) {
+        this.makePostService = makePostService;
+    }
 
     /**
      * This function handles the /post/{postId} URL.
@@ -46,7 +55,7 @@ public class PostController {
 
         // Following line populates sample data.
         // You should replace it with actual data from the database.
-        List<ExpandedPost> posts = Utility.createSampleExpandedPostWithComments();
+        List<ExpandedPost> posts = makePostService.getExpandedPost(postId);
         mv.addObject("posts", posts);
 
         // If an error occured, you can set the following property with the
@@ -74,6 +83,12 @@ public class PostController {
         System.out.println("The user is attempting add a comment:");
         System.out.println("\tpostId: " + postId);
         System.out.println("\tcomment: " + comment);
+
+        boolean success = makePostService.makeComment(postId, comment);
+
+        if (success) {
+            return "redirect:/post/" + postId;
+        }
 
         // Redirect the user if the comment adding is a success.
         // return "redirect:/post/" + postId;

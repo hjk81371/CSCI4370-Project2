@@ -14,6 +14,8 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import uga.menik.cs4370.models.Comment;
+import uga.menik.cs4370.models.ExpandedPost;
 import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.models.User;
 
@@ -161,6 +163,7 @@ public class MakePostService {
         }
     } // getIsHearted
 
+
     private boolean getIsBookmarked(String postId, String currUserId) {
 
         final String sqlString = "select * from bookmark where postId = " + postId;
@@ -181,5 +184,103 @@ public class MakePostService {
             return false;
         }
     } // isBookmarked
+
+    public List<Comment> getComments(String postId) {
+
+        final String sqlString = "select * from comment where postId = " + postId;
+    
+        List<Comment> comments = new ArrayList<>();
+
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String currContent = rs.getString("commentText");
+                String currDate = rs.getString("commentDate");
+                String currUserId = rs.getString("userId");
+                User currUser = userService.getUserById(currUserId);
+                // postId, content, date, user
+                Comment currComment = new Comment(postId, currContent, currDate, currUser);
+                comments.add(currComment);
+            }
+
+            return comments;
+
+        } catch (SQLException sqle) {
+            sqle.printStackTrace();
+            return comments;
+        }
+    }
+
+    public boolean makeComment(String postId, String comment) {
+
+        final String sqlString = "insert into comment (postId, userId, commentDate, commentText) values (?, ?, ?, ?)";
+
+        String userId = userService.getLoggedInUser().getUserId();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy, hh:mm a");
+        Date currentDate = new Date();
+        String formattedDate = sdf.format(currentDate);
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+            pstmt.setString(1, postId);
+            pstmt.setString(2, userId);
+            pstmt.setString(3, formattedDate);
+            pstmt.setString(4, comment);
+
+
+            int rowsChanged = pstmt.executeUpdate();
+
+            if (rowsChanged > 0) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (SQLException sqle) {
+            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+            return false;
+        } // try
+
+    } // makeComment
+
+    public List<ExpandedPost> getExpandedPost(String postId) {
+
+
+        final String sql = "select postId, postDate, postText from post where postId = " + postId;
+
+        User currUser = userService.getLoggedInUser();
+
+        boolean currIsHearted = getIsHearted(postId, currUser.getUserId());
+
+        boolean currIsBookmarked = getIsBookmarked(postId, currUser.getUserId());
+
+        int currHeartCount = getHeartsCount(postId);
+
+        int currCommentCount = getCommentsCount(postId);
+
+        List<Comment> currComments = getComments(postId);
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                while(rs.next()) {
+                    String currPostDate = rs.getString("postDate");
+                    String currPostText = rs.getString("postText");
+                    ExpandedPost expandedPost = new ExpandedPost(postId, currPostText, currPostDate, currUser, currHeartCount, currCommentCount, currIsHearted, currIsBookmarked, currComments);
+                    return List.of(expandedPost);
+                }
+                return null;
+            }
+
+        } catch (SQLException sqle) {
+            System.err.println("SQL EXCEPTIONL " + sqle.getMessage());
+            return null;
+        }
+    }
 
 }

@@ -340,7 +340,7 @@ public class MakePostService {
 
     public List<ExpandedPost> getExpandedPost(String postId) {
 
-        final String sql = "select postId, postDate, postText from post where postId = " + postId;
+        final String sql = "select postId, postDate, postText, userId from post where postId = " + postId;
 
         User currUser = userService.getLoggedInUser();
 
@@ -354,6 +354,7 @@ public class MakePostService {
 
         List<Comment> currComments = getComments(postId);
 
+
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -361,7 +362,9 @@ public class MakePostService {
                 while (rs.next()) {
                     String currPostDate = rs.getString("postDate");
                     String currPostText = rs.getString("postText");
-                    ExpandedPost expandedPost = new ExpandedPost(postId, currPostText, currPostDate, currUser,
+                    String userId = rs.getString("userId");
+                    User postUser = userService.getUserById(userId);
+                    ExpandedPost expandedPost = new ExpandedPost(postId, currPostText, currPostDate, postUser,
                             currHeartCount, currCommentCount, currIsHearted, currIsBookmarked, currComments);
                     return List.of(expandedPost);
                 }

@@ -29,11 +29,10 @@ import uga.menik.cs4370.utility.Utility;
 @RequestMapping("/hashtagsearch")
 public class HashtagSearchController {
 
-    private final MakePostService makePostSrv;
-    private final UserService usrSrv;
-    public HashtagSearchController(MakePostService makePostSrv, UserService usrSrv) {
-        this.postService = postService;
-        this.usrSrv = usrSrv;
+    private final MakePostService makePostService;
+
+    public HashtagSearchController(MakePostService makePostService) {
+        this.makePostService = makePostService;
     }
 
     /**
@@ -50,25 +49,7 @@ public class HashtagSearchController {
         // See notes on ModelAndView in BookmarksController.java.
         ModelAndView mv = new ModelAndView("posts_page");
 
-        // Following line populates sample data.
-        // You should replace it with actual data from the database.
-
-        User logdIn = userService.getLoggedInUser();
-        List<String> hashList = new ArrayList<>();
-        List<ExpandedPost> hashPostComb = new ArrayList<>();
-
-        for(String hash : hashtags.split("\\s+")){
-            hashList.add(hashtag);
-        }
-        for(String hashtag : hashList){
-            if(!hastag.startsWith('#')){
-                hashtag = '#' + hashtag;
-            }
-            List<ExpandedPost> hashPosts = makePostSrv.getHashtag(logdIn, hashtag);
-            hashPostComb.addAll(hashPosts);
-        }
-        hashPostCom = makePostSrv.order.By
-        List<Post> posts = Utility.createSamplePostsListWithoutComments();
+        List<Post> posts = makePostService.getPostsFromHashtag(hashtags);
         mv.addObject("posts", posts);
 
         // If an error occured, you can set the following property with the

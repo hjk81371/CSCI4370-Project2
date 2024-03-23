@@ -493,4 +493,71 @@ public class MakePostService {
 
     } // handleBookmark
 
+
+    public List<Post> getPostsFromHashtag(String input) {
+
+        List<String> hashtags = hashTagExtractor(input);
+
+        List<String> postIds = new ArrayList<>();
+
+        List<Post> posts = new ArrayList<>();
+
+        for (String hashtag : hashtags) {
+
+       
+        final String sqlString = "select postId from hashtag where hashTag = '" + hashtag + "'";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                while (rs.next()) {
+                    String postId = rs.getString("postId");
+                    postIds.add(postId);
+                } // while
+
+            }
+
+        } catch (SQLException sqle) {
+            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+        } // try
+
+        } // for
+
+        for (String postId : postIds) {
+       
+            final String sqlString = "select * from post where postId = " + postId;
+
+            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+    
+                try (ResultSet rs = pstmt.executeQuery()) {
+    
+                    while (rs.next()) {
+                        String currPostId = rs.getString("postId");
+                        String currUserId = rs.getString("userId");
+                        String currPostText = rs.getString("postText");
+                        String currPostDate = rs.getString("postDate");
+    
+                        User currUser = userService.getUserById(currUserId);
+    
+                        int heartsCount = getHeartsCount(currPostId);
+                        int commentsCount = getCommentsCount(currPostId);
+                        boolean isHearted = getIsHearted(currPostId, currUserId);
+                        boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+    
+                        Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
+                                isHearted, isBookmarked);
+                        posts.add(post);
+                    } // while
+
+                }
+            } catch (SQLException sqle) {
+                System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+            } // try
+        } // for
+
+        return posts;
+
+    } // getPostsFromHashtag
+
 }

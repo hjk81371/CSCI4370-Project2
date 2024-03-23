@@ -19,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import uga.menik.cs4370.models.FollowableUser;
+import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.utility.Utility;
 
 /**
@@ -34,6 +35,7 @@ public class PeopleService {
         this.dataSource = dataSource;
     }
     
+
     /**
      * This function should query and return all users that 
      * are followable. The list should not contain the user 
@@ -58,7 +60,9 @@ public class PeopleService {
                     // String currRowUsername = rs.getString("Username");
                     String currRowFirstName = rs.getString("firstName");
                     String currRowLastName = rs.getString("lastName");
-                    FollowableUser currFollowableUser = new FollowableUser(currRowId, currRowFirstName, currRowLastName, false, "Mar 07, 2024, 10:54 PM");
+                    // get Last Post time from user
+                   
+                    FollowableUser currFollowableUser = new FollowableUser(currRowId, currRowFirstName, currRowLastName, false, "date");//"Mar 07, 2024, 10:54 PM"); //currPostDate); 
                     followableUserList.add(currFollowableUser);
                 } // while
 

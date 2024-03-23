@@ -112,6 +112,12 @@ public class PostController {
         System.out.println("\tpostId: " + postId);
         System.out.println("\tisAdd: " + isAdd);
 
+        boolean success = makePostService.handleHeart(postId, isAdd);
+
+        if (success) {
+            return "redirect:/post/" + postId;
+        }
+
         // Redirect the user if the comment adding is a success.
         // return "redirect:/post/" + postId;
 

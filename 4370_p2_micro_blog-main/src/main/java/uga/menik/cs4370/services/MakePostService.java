@@ -283,4 +283,59 @@ public class MakePostService {
         }
     }
 
+    public boolean handleHeart(String postId, boolean isHeart) {
+
+        if (isHeart) {
+            // liking the post
+
+            final String sqlString = "insert into heart (postId, userId) values (?, ?)";
+
+            String userId = userService.getLoggedInUser().getUserId();
+    
+            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+    
+                pstmt.setString(1, postId);
+                pstmt.setString(2, userId);
+    
+                int rowsChanged = pstmt.executeUpdate();
+    
+                if (rowsChanged > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+    
+            } catch (SQLException sqle) {
+                System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+                return false;
+            } // try
+
+        } else {
+            // unliking the post
+
+            final String sqlString = "delete from heart where userId = ?";
+
+            String userId = userService.getLoggedInUser().getUserId();
+    
+            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+    
+                pstmt.setString(1, userId);
+    
+                int rowsChanged = pstmt.executeUpdate();
+    
+                if (rowsChanged > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+    
+            } catch (SQLException sqle) {
+                System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+                return false;
+            } // try
+
+        } // if
+
+    }
+
 }

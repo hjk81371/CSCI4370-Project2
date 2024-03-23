@@ -39,7 +39,7 @@ public class MakePostService {
         String userId = user.getUserId();
 
         // Get current data and time
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy, hh:mm a");
+        SimpleDateFormat sdf = new SimpleDateFormat("MM dd, yyyy, hh:mm a");
         Date currentDate = new Date();
         String formattedDate = sdf.format(currentDate);
 

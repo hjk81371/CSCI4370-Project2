@@ -24,6 +24,13 @@ import uga.menik.cs4370.utility.Utility;
 @RequestMapping("/hashtagsearch")
 public class HashtagSearchController {
 
+    private final MakePostService makePostSrv;
+    private final UserService usrSrv;
+    public HashtagSearchController(MakePostService makePostSrv, UserService usrSrv) {
+        this.postService = postService;
+        this.usrSrv = usrSrv;
+    }
+
     /**
      * This function handles the /hashtagsearch URL itself.
      * This URL can process a request parameter with name hashtags.
@@ -40,6 +47,22 @@ public class HashtagSearchController {
 
         // Following line populates sample data.
         // You should replace it with actual data from the database.
+
+        User logdIn = userService.getLoggedInUser();
+        List<String> hashList = new ArrayList<>();
+        List<ExpandedPost> hashPostComb = new ArrayList<>();
+
+        for(String hash : hashtags.split("\\s+")){
+            hashList.add(hashtag);
+        }
+        for(String hashtag : hashList){
+            if(!hastag.startsWith('#')){
+                hashtag = '#' + hashtag;
+            }
+            List<ExpandedPost> hashPosts = makePostSrv.getHashtag(logdIn, hashtag);
+            hashPostComb.addAll(hashPosts);
+        }
+        hashPostCom = makePostSrv.order.By
         List<Post> posts = Utility.createSamplePostsListWithoutComments();
         mv.addObject("posts", posts);
 

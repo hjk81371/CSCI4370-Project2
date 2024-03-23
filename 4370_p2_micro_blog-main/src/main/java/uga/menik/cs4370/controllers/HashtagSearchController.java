@@ -50,7 +50,12 @@ public class HashtagSearchController {
         ModelAndView mv = new ModelAndView("posts_page");
 
         List<Post> posts = makePostService.getPostsFromHashtag(hashtags);
-        mv.addObject("posts", posts);
+        if (posts.size() < 1) {
+            mv.addObject("isNoContent", true);
+        } else {
+            mv.addObject("posts", posts);
+        }
+        
 
         // If an error occured, you can set the following property with the
         // error message to show the error message to the user.

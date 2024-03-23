@@ -8,8 +8,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import javax.sql.DataSource;
+import java.sql.Statement;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,7 +46,7 @@ public class MakePostService {
         final String sqlString = "INSERT INTO post (userId, postDate, postText) VALUES (?, ?, ?)";
 
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, userId);
             pstmt.setString(2, formattedDate);
@@ -53,7 +56,19 @@ public class MakePostService {
 
             if (rowsAffected > 0) {
                 System.out.println("Post inserted successfully!");
+
+                ResultSet generatedKeys = pstmt.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    
+                    String postId = Integer.toString(generatedKeys.getInt(1));
+                    System.out.println("Generated postId: " + postId);
+                    addHashTags(postId, text);
+                } else {
+                    System.out.println("Failed to get generated postId key");
+                }
+
                 return true;
+
             } else {
                 System.out.println("Failed to insert post.");
                 return false;
@@ -65,6 +80,43 @@ public class MakePostService {
         }
 
     } // makePost
+
+    private void addHashTags(String postId, String text) {
+        List<String> hashTags = hashTagExtractor(text);
+
+        System.out.println("HASHTAG LENGTH: " + hashTags.size());
+
+        for (String hashtag : hashTags) {
+            String sqlString = "INSERT INTO hashtag (hashtag, postId) VALUES (?, ?)";
+
+
+            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+    
+                pstmt.setString(1, hashtag);
+                pstmt.setString(2, postId);
+
+                pstmt.executeUpdate();
+        
+            } catch (SQLException sqle) {
+                sqle.printStackTrace();
+            }
+        } // for
+
+    } // addHashTags
+
+    private List<String> hashTagExtractor(String input) {
+
+        List<String> hashtags = new ArrayList<>();
+        Pattern pattern = Pattern.compile("#\\w+");
+        Matcher matcher = pattern.matcher(input);
+        
+        while (matcher.find()) {
+            hashtags.add(matcher.group());
+        }
+        
+        return hashtags;
+    } // HashtagExtractor
+
 
     public List<Post> getPosts() {
         List<Post> posts = new ArrayList<>();

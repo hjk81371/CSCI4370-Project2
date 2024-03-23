@@ -365,13 +365,14 @@ public class MakePostService {
         } else {
             // unliking the post
 
-            final String sqlString = "delete from heart where postId = ?";
+            final String sqlString = "delete from heart where postId = ? and userId = ?";
 
             String userId = userService.getLoggedInUser().getUserId();
     
             try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
     
                 pstmt.setString(1, postId);
+                pstmt.setString(2, userId);
     
                 int rowsChanged = pstmt.executeUpdate();
     
@@ -421,13 +422,14 @@ public class MakePostService {
         } else {
             // unliking the post
 
-            final String sqlString = "delete from bookmark where postId = ?";
+            final String sqlString = "delete from bookmark where postId = ? and userId = ?";
 
             String userId = userService.getLoggedInUser().getUserId();
     
             try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
     
                 pstmt.setString(1, postId);
+                pstmt.setString(2, userId);
     
                 int rowsChanged = pstmt.executeUpdate();
     

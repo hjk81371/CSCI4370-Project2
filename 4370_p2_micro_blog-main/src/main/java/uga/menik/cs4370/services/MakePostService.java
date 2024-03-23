@@ -313,13 +313,13 @@ public class MakePostService {
         } else {
             // unliking the post
 
-            final String sqlString = "delete from heart where userId = ?";
+            final String sqlString = "delete from heart where postId = ?";
 
             String userId = userService.getLoggedInUser().getUserId();
     
             try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
     
-                pstmt.setString(1, userId);
+                pstmt.setString(1, postId);
     
                 int rowsChanged = pstmt.executeUpdate();
     
@@ -336,6 +336,62 @@ public class MakePostService {
 
         } // if
 
-    }
+    } // handleHeart
+
+
+    public boolean handleBookmark(String postId, boolean isBookmark) {
+
+        if (isBookmark) {
+            // liking the post
+
+            final String sqlString = "insert into bookmark (postId, userId) values (?, ?)";
+
+            String userId = userService.getLoggedInUser().getUserId();
+    
+            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+    
+                pstmt.setString(1, postId);
+                pstmt.setString(2, userId);
+    
+                int rowsChanged = pstmt.executeUpdate();
+    
+                if (rowsChanged > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+    
+            } catch (SQLException sqle) {
+                System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+                return false;
+            } // try
+
+        } else {
+            // unliking the post
+
+            final String sqlString = "delete from bookmark where postId = ?";
+
+            String userId = userService.getLoggedInUser().getUserId();
+    
+            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+    
+                pstmt.setString(1, postId);
+    
+                int rowsChanged = pstmt.executeUpdate();
+    
+                if (rowsChanged > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+    
+            } catch (SQLException sqle) {
+                System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+                return false;
+            } // try
+
+        } // if
+
+    } // handleBookmark
 
 }

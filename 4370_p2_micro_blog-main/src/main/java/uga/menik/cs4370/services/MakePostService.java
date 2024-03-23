@@ -4,8 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -24,7 +26,7 @@ import uga.menik.cs4370.models.User;
 
 @Service
 public class MakePostService {
-    
+
     private final DataSource dataSource;
     private final UserService userService;
 
@@ -33,7 +35,7 @@ public class MakePostService {
         this.dataSource = dataSource;
         this.userService = userService;
     }
-    
+
     public boolean makePost(User user, String text) {
 
         String userId = user.getUserId();
@@ -45,13 +47,13 @@ public class MakePostService {
 
         final String sqlString = "INSERT INTO post (userId, postDate, postText) VALUES (?, ?, ?)";
 
-
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sqlString, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, userId);
             pstmt.setString(2, formattedDate);
             pstmt.setString(3, text);
-    
+
             int rowsAffected = pstmt.executeUpdate();
 
             if (rowsAffected > 0) {
@@ -59,7 +61,7 @@ public class MakePostService {
 
                 ResultSet generatedKeys = pstmt.getGeneratedKeys();
                 if (generatedKeys.next()) {
-                    
+
                     String postId = Integer.toString(generatedKeys.getInt(1));
                     System.out.println("Generated postId: " + postId);
                     addHashTags(postId, text);
@@ -73,7 +75,7 @@ public class MakePostService {
                 System.out.println("Failed to insert post.");
                 return false;
             }
-    
+
         } catch (SQLException sqle) {
             sqle.printStackTrace();
             return false;
@@ -89,14 +91,14 @@ public class MakePostService {
         for (String hashtag : hashTags) {
             String sqlString = "INSERT INTO hashtag (hashtag, postId) VALUES (?, ?)";
 
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
-            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
-    
                 pstmt.setString(1, hashtag);
                 pstmt.setString(2, postId);
 
                 pstmt.executeUpdate();
-        
+
             } catch (SQLException sqle) {
                 sqle.printStackTrace();
             }
@@ -109,14 +111,13 @@ public class MakePostService {
         List<String> hashtags = new ArrayList<>();
         Pattern pattern = Pattern.compile("#\\w+");
         Matcher matcher = pattern.matcher(input);
-        
+
         while (matcher.find()) {
             hashtags.add(matcher.group());
         }
-        
+
         return hashtags;
     } // HashtagExtractor
-
 
     public List<Post> getPosts() {
         List<Post> posts = new ArrayList<>();
@@ -135,13 +136,13 @@ public class MakePostService {
 
                     User currUser = userService.getUserById(currUserId);
 
-
                     int heartsCount = getHeartsCount(currPostId);
                     int commentsCount = getCommentsCount(currPostId);
                     boolean isHearted = getIsHearted(currPostId, currUserId);
                     boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
-                    
-                    Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount, isHearted, isBookmarked);
+
+                    Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
+                            isHearted, isBookmarked);
                     posts.add(post);
                 } // while
 
@@ -154,10 +155,54 @@ public class MakePostService {
         return posts;
     } // getPosts
 
+    
+    
+
+    public List<Date> getPostsDate(String userID) {        
+        //String formattedDate = sdf.format(currentDate);
+        SimpleDateFormat sdf = new SimpleDateFormat("MM dd, yyyy, hh:mm a");
+        //Date currentDate = new Date();
+        //String formattedDate = sdf.format(currentDate);
+        
+        List<Date> date = new ArrayList<>();
+
+        final String newsqlString = "select postDate from post";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(newsqlString)) {
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                //SimpleDateFormat sdfd = new SimpleDateFormat("MM dd, yyyy, hh:mm a");
+            
+                while (rs.next()) {
+
+                    String currPostDate = rs.getString("postDate");
+                    try {
+                        Date formdate = sdf.parse(currPostDate);
+                        date.add(formdate);
+                    } catch(ParseException e) {
+                        System.err.println("PARSE EXCEPTION: " + e.getMessage());
+                    }                  
+                    
+                }
+            }
+        Collections.sort(date);
+        } catch (SQLException sqle) {
+            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+        } // try
+        return date;
+    }
+
+    String getDate() {
+        
+       return getDate(); 
+    }
+
+
+    
+
     private int getHeartsCount(String postId) {
 
         final String sqlString = "select * from heart where postId = " + postId;
-
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
@@ -178,7 +223,6 @@ public class MakePostService {
 
         final String sqlString = "select * from comment where postId = " + postId;
 
-
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
             ResultSet rs = pstmt.executeQuery();
@@ -198,7 +242,6 @@ public class MakePostService {
 
         final String sqlString = "select * from heart where postId = " + postId;
 
-
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
             ResultSet rs = pstmt.executeQuery();
@@ -215,11 +258,9 @@ public class MakePostService {
         }
     } // getIsHearted
 
-
     private boolean getIsBookmarked(String postId, String currUserId) {
 
         final String sqlString = "select * from bookmark where postId = " + postId;
-
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
@@ -240,9 +281,8 @@ public class MakePostService {
     public List<Comment> getComments(String postId) {
 
         final String sqlString = "select * from comment where postId = " + postId;
-    
-        List<Comment> comments = new ArrayList<>();
 
+        List<Comment> comments = new ArrayList<>();
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
@@ -283,7 +323,6 @@ public class MakePostService {
             pstmt.setString(3, formattedDate);
             pstmt.setString(4, comment);
 
-
             int rowsChanged = pstmt.executeUpdate();
 
             if (rowsChanged > 0) {
@@ -300,7 +339,6 @@ public class MakePostService {
     } // makeComment
 
     public List<ExpandedPost> getExpandedPost(String postId) {
-
 
         final String sql = "select postId, postDate, postText from post where postId = " + postId;
 
@@ -320,10 +358,11 @@ public class MakePostService {
 
             try (ResultSet rs = pstmt.executeQuery()) {
 
-                while(rs.next()) {
+                while (rs.next()) {
                     String currPostDate = rs.getString("postDate");
                     String currPostText = rs.getString("postText");
-                    ExpandedPost expandedPost = new ExpandedPost(postId, currPostText, currPostDate, currUser, currHeartCount, currCommentCount, currIsHearted, currIsBookmarked, currComments);
+                    ExpandedPost expandedPost = new ExpandedPost(postId, currPostText, currPostDate, currUser,
+                            currHeartCount, currCommentCount, currIsHearted, currIsBookmarked, currComments);
                     return List.of(expandedPost);
                 }
                 return null;
@@ -343,20 +382,21 @@ public class MakePostService {
             final String sqlString = "insert into heart (postId, userId) values (?, ?)";
 
             String userId = userService.getLoggedInUser().getUserId();
-    
-            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
-    
+
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
                 pstmt.setString(1, postId);
                 pstmt.setString(2, userId);
-    
+
                 int rowsChanged = pstmt.executeUpdate();
-    
+
                 if (rowsChanged > 0) {
                     return true;
                 } else {
                     return false;
                 }
-    
+
             } catch (SQLException sqle) {
                 System.err.println("SQL EXCEPTION: " + sqle.getMessage());
                 return false;
@@ -368,20 +408,21 @@ public class MakePostService {
             final String sqlString = "delete from heart where postId = ? and userId = ?";
 
             String userId = userService.getLoggedInUser().getUserId();
-    
-            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
-    
+
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
                 pstmt.setString(1, postId);
                 pstmt.setString(2, userId);
-    
+
                 int rowsChanged = pstmt.executeUpdate();
-    
+
                 if (rowsChanged > 0) {
                     return true;
                 } else {
                     return false;
                 }
-    
+
             } catch (SQLException sqle) {
                 System.err.println("SQL EXCEPTION: " + sqle.getMessage());
                 return false;
@@ -391,7 +432,6 @@ public class MakePostService {
 
     } // handleHeart
 
-
     public boolean handleBookmark(String postId, boolean isBookmark) {
 
         if (isBookmark) {
@@ -400,20 +440,21 @@ public class MakePostService {
             final String sqlString = "insert into bookmark (postId, userId) values (?, ?)";
 
             String userId = userService.getLoggedInUser().getUserId();
-    
-            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
-    
+
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
                 pstmt.setString(1, postId);
                 pstmt.setString(2, userId);
-    
+
                 int rowsChanged = pstmt.executeUpdate();
-    
+
                 if (rowsChanged > 0) {
                     return true;
                 } else {
                     return false;
                 }
-    
+
             } catch (SQLException sqle) {
                 System.err.println("SQL EXCEPTION: " + sqle.getMessage());
                 return false;
@@ -425,20 +466,21 @@ public class MakePostService {
             final String sqlString = "delete from bookmark where postId = ? and userId = ?";
 
             String userId = userService.getLoggedInUser().getUserId();
-    
-            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
-    
+
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
                 pstmt.setString(1, postId);
                 pstmt.setString(2, userId);
-    
+
                 int rowsChanged = pstmt.executeUpdate();
-    
+
                 if (rowsChanged > 0) {
                     return true;
                 } else {
                     return false;
                 }
-    
+
             } catch (SQLException sqle) {
                 System.err.println("SQL EXCEPTION: " + sqle.getMessage());
                 return false;

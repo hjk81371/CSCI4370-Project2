@@ -22,6 +22,7 @@ import uga.menik.cs4370.models.User;
 import uga.menik.cs4370.services.PeopleService;
 import uga.menik.cs4370.services.UserService;
 import uga.menik.cs4370.utility.Utility;
+import uga.menik.cs4370.services.MakePostService;
 
 /**
  * Handles /people URL and its sub URL paths.
@@ -36,12 +37,23 @@ public class PeopleController {
     // UserService has user login and registration related functions.
     private final UserService userService;
     private final PeopleService peopleService;
+    private final MakePostService makePostService;
 
     @Autowired
-    public PeopleController(UserService userService, PeopleService peopleService) {
+    public PeopleController(UserService userService, PeopleService peopleService, MakePostService makePostService) {
         this.userService = userService;
         this.peopleService = peopleService;
+        this.makePostService = makePostService;
     }
+
+    /**
+    @Autowired
+    public PeopleController(MakePostService makePostService, UserService userService) {
+        this.userService = userService;
+        this.makePostService = makePostService;
+    }
+    */
+
     /**
      * Serves the /people web page.
      * 
@@ -103,4 +115,18 @@ public class PeopleController {
         return "redirect:/people?error=" + message;
     }
 
+
+    /** 
+    public String getPost(@RequestParam(name = "posttext") String postText) {
+        System.out.println("User is creating post: " + postText);
+
+        User currUser = userService.getLoggedInUser();
+
+        boolean success = makePostService.getPosts();
+
+        if (success) {
+            return "redirect:/";
+        }
+    }
+    */
 }

@@ -20,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.models.User;
+import uga.menik.cs4370.services.MakePostService;
 import uga.menik.cs4370.services.UserService;
 import uga.menik.cs4370.utility.Utility;
 
@@ -32,14 +33,16 @@ public class ProfileController {
 
     // UserService has user login and registration related functions.
     private final UserService userService;
+    private final MakePostService makePostService;
 
     /**
-     * See notes in AuthInterceptor.java regarding how this works 
+     * See notes in AuthInterceptor.java regarding how this works
      * through dependency injection and inversion of control.
      */
     @Autowired
-    public ProfileController(UserService userService) {
+    public ProfileController(UserService userService, MakePostService makePostService) {
         this.userService = userService;
+        this.makePostService = makePostService;
     }
 
     /**
@@ -67,7 +70,7 @@ public class ProfileController {
 
         // Following line populates sample data.
         // You should replace it with actual data from the database.
-        List<Post> posts = Utility.createSamplePostsListWithoutComments();
+        List<Post> posts = makePostService.getPostsFromUID(userId);
         mv.addObject("posts", posts);
 
         // If an error occured, you can set the following property with the
@@ -80,6 +83,21 @@ public class ProfileController {
         // mv.addObject("isNoContent", true);
         
         return mv;
-    }
+
+
+
+
+
+
+    /**
+     * This function handles the /hashtagsearch URL itself.
+     * This URL can process a request parameter with name hashtags.
+     * In the browser the URL will look something like below:
+     * http://localhost:8081/hashtagsearch?hashtags=%23amazing+%23fireworks
+     * Note: the value of the hashtags is URL encoded.
+     */
+        
     
+    }
+
 }

@@ -58,7 +58,7 @@ public class HomeController {
 
         // Following line populates sample data.
         // You should replace it with actual data from the database.
-        List<Post> posts = makePostService.getPosts();
+        List<Post> posts = makePostService.getFollowerPosts();
         mv.addObject("posts", posts);
 
         // If an error occured, you can set the following property with the

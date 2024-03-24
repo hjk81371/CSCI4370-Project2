@@ -16,7 +16,7 @@ To run this project:
 
 | Name | UserID | Contribution |
 | ------------- | ------------- | ------------- |
-|Brandon Barth | | Was on VC giving moral support |
+|Brandon Barth | brb60647 | Worked collaboratively on Hashtag Search, Bookmarks Page, Profile Page, and Helped with Properly ordering |
 |Harrison Kiersten | Something | Did something |
 | Nate Kite | Yes | I don't know yet |
 | Daniel Mora | Uh huh | Genius Mastermind that did nothing |

@@ -7,6 +7,7 @@ package uga.menik.cs4370.controllers;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,8 @@ import org.springframework.web.servlet.ModelAndView;
 
 import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.utility.Utility;
+import uga.menik.cs4370.services.MakePostService;
+import uga.menik.cs4370.services.UserService;
 
 /**
  * Handles /bookmarks and its sub URLs.
@@ -25,6 +28,16 @@ import uga.menik.cs4370.utility.Utility;
 @Controller
 @RequestMapping("/bookmarks")
 public class BookmarksController {
+
+    private final UserService userService;
+    private final MakePostService makePostService;
+
+    @Autowired
+    public BookmarksController(MakePostService makePostService, UserService userService) {
+        this.userService = userService;
+        this.makePostService = makePostService;
+    }
+
 
     /**
      * /bookmarks URL itself is handled by this.
@@ -38,7 +51,7 @@ public class BookmarksController {
 
         // Following line populates sample data.
         // You should replace it with actual data from the database.
-        List<Post> posts = Utility.createSamplePostsListWithoutComments();
+        List<Post> posts = makePostService.getPostsFromBookmark();
         mv.addObject("posts", posts);
 
         // If an error occured, you can set the following property with the

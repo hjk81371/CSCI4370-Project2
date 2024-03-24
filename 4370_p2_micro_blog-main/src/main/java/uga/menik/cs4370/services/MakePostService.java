@@ -155,15 +155,48 @@ public class MakePostService {
         return posts;
     } // getPosts
 
-    
-    
+    public List<Post> getPostsFromUID(String user) {
+        List<Post> posts = new ArrayList<>();
 
-    public List<Date> getPostsDate(String userID) {        
-        //String formattedDate = sdf.format(currentDate);
+        final String sqlString = "select * from post where userId = " + user;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                while (rs.next()) {
+                    String currPostId = rs.getString("postId");
+                    String currUserId = rs.getString("userId");
+                    String currPostText = rs.getString("postText");
+                    String currPostDate = rs.getString("postDate");
+
+                    User currUser = userService.getUserById(currUserId);
+
+                    int heartsCount = getHeartsCount(currPostId);
+                    int commentsCount = getCommentsCount(currPostId);
+                    boolean isHearted = getIsHearted(currPostId, currUserId);
+                    boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+
+                    Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
+                            isHearted, isBookmarked);
+                    posts.add(post);
+                } // while
+
+            }
+
+        } catch (SQLException sqle) {
+            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+        } // try
+
+        return posts;
+    } // getPosts
+
+    public List<Date> getPostsDate(String userID) {
+        // String formattedDate = sdf.format(currentDate);
         SimpleDateFormat sdf = new SimpleDateFormat("MM dd, yyyy, hh:mm a");
-        //Date currentDate = new Date();
-        //String formattedDate = sdf.format(currentDate);
-        
+        // Date currentDate = new Date();
+        // String formattedDate = sdf.format(currentDate);
+
         List<Date> date = new ArrayList<>();
 
         final String newsqlString = "select postDate from post";
@@ -171,21 +204,21 @@ public class MakePostService {
                 PreparedStatement pstmt = conn.prepareStatement(newsqlString)) {
 
             try (ResultSet rs = pstmt.executeQuery()) {
-                //SimpleDateFormat sdfd = new SimpleDateFormat("MM dd, yyyy, hh:mm a");
-            
+                // SimpleDateFormat sdfd = new SimpleDateFormat("MM dd, yyyy, hh:mm a");
+
                 while (rs.next()) {
 
                     String currPostDate = rs.getString("postDate");
                     try {
                         Date formdate = sdf.parse(currPostDate);
                         date.add(formdate);
-                    } catch(ParseException e) {
+                    } catch (ParseException e) {
                         System.err.println("PARSE EXCEPTION: " + e.getMessage());
-                    }                  
-                    
+                    }
+
                 }
             }
-        Collections.sort(date);
+            Collections.sort(date);
         } catch (SQLException sqle) {
             System.err.println("SQL EXCEPTION: " + sqle.getMessage());
         } // try
@@ -193,12 +226,9 @@ public class MakePostService {
     }
 
     String getDate() {
-        
-       return getDate(); 
+
+        return getDate();
     }
-
-
-    
 
     private int getHeartsCount(String postId) {
 
@@ -354,7 +384,6 @@ public class MakePostService {
 
         List<Comment> currComments = getComments(postId);
 
-
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -493,7 +522,6 @@ public class MakePostService {
 
     } // handleBookmark
 
-
     public List<Post> getPostsFromHashtag(String input) {
 
         List<String> hashtags = hashTagExtractor(input);
@@ -504,49 +532,52 @@ public class MakePostService {
 
         for (String hashtag : hashtags) {
 
-       
-        final String sqlString = "select postId from hashtag where hashTag = '" + hashtag + "'";
+            final String sqlString = "select postId from hashtag where hashTag = '" + hashtag + "'";
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
-            try (ResultSet rs = pstmt.executeQuery()) {
+                try (ResultSet rs = pstmt.executeQuery()) {
 
-                while (rs.next()) {
-                    String postId = rs.getString("postId");
-                    postIds.add(postId);
-                } // while
+                    while (rs.next()) {
+                        String postId = rs.getString("postId");
+                        postIds.add(postId);
+                    } // while
 
-            }
+                }
 
-        } catch (SQLException sqle) {
-            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
-        } // try
+            } catch (SQLException sqle) {
+                System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+            } // try
 
         } // for
 
         for (String postId : postIds) {
-       
+
             final String sqlString = "select * from post where postId = " + postId;
 
-            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
-    
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
                 try (ResultSet rs = pstmt.executeQuery()) {
-    
+
                     while (rs.next()) {
                         String currPostId = rs.getString("postId");
                         String currUserId = rs.getString("userId");
                         String currPostText = rs.getString("postText");
                         String currPostDate = rs.getString("postDate");
-    
+
                         User currUser = userService.getUserById(currUserId);
-    
+
                         int heartsCount = getHeartsCount(currPostId);
                         int commentsCount = getCommentsCount(currPostId);
                         boolean isHearted = getIsHearted(currPostId, currUserId);
                         boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
-    
-                        Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
+
+                        Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount,
+                                commentsCount,
                                 isHearted, isBookmarked);
+                        // if bookmarked add post otherwise do nothing
                         posts.add(post);
                     } // while
 
@@ -560,4 +591,44 @@ public class MakePostService {
 
     } // getPostsFromHashtag
 
+    public List<Post> getPostsFromBookmark() {
+        List<Post> posts = new ArrayList<>();
+
+        final String sqlString = "select * from post";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                while (rs.next()) {
+                    String currPostId = rs.getString("postId");
+                    String currUserId = rs.getString("userId");
+                    String currPostText = rs.getString("postText");
+                    String currPostDate = rs.getString("postDate");
+
+                    User currUser = userService.getUserById(currUserId);
+
+                    int heartsCount = getHeartsCount(currPostId);
+                    int commentsCount = getCommentsCount(currPostId);
+                    boolean isHearted = getIsHearted(currPostId, currUserId);
+                    boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+
+                    Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
+                            isHearted, isBookmarked);
+                
+                    if(post.isBookmarked() == true) {
+                        posts.add(post);
+                    }
+                    
+
+                } // while
+
+            }
+
+        } catch (SQLException sqle) {
+            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+        } // try
+
+        return posts;
+    } // getPostsFromBookmark
 }

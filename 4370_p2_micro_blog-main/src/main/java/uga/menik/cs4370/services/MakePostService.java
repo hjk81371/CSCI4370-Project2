@@ -23,6 +23,7 @@ import uga.menik.cs4370.models.Comment;
 import uga.menik.cs4370.models.ExpandedPost;
 import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.models.User;
+import uga.menik.cs4370.models.FollowableUser;
 
 @Service
 public class MakePostService {
@@ -122,7 +123,7 @@ public class MakePostService {
     public List<Post> getPosts() {
         List<Post> posts = new ArrayList<>();
 
-        final String sqlString = "select * from post";
+        final String sqlString = "select * from post order by postDate desc";
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
@@ -158,7 +159,7 @@ public class MakePostService {
     public List<Post> getPostsFromUID(String user) {
         List<Post> posts = new ArrayList<>();
 
-        final String sqlString = "select * from post where userId = " + user;
+        final String sqlString = "select * from post where userId = " + user + " order by postDate desc";
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
@@ -191,44 +192,7 @@ public class MakePostService {
         return posts;
     } // getPosts
 
-    public List<Date> getPostsDate(String userID) {
-        // String formattedDate = sdf.format(currentDate);
-        SimpleDateFormat sdf = new SimpleDateFormat("MM dd, yyyy, hh:mm a");
-        // Date currentDate = new Date();
-        // String formattedDate = sdf.format(currentDate);
 
-        List<Date> date = new ArrayList<>();
-
-        final String newsqlString = "select postDate from post";
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(newsqlString)) {
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                // SimpleDateFormat sdfd = new SimpleDateFormat("MM dd, yyyy, hh:mm a");
-
-                while (rs.next()) {
-
-                    String currPostDate = rs.getString("postDate");
-                    try {
-                        Date formdate = sdf.parse(currPostDate);
-                        date.add(formdate);
-                    } catch (ParseException e) {
-                        System.err.println("PARSE EXCEPTION: " + e.getMessage());
-                    }
-
-                }
-            }
-            Collections.sort(date);
-        } catch (SQLException sqle) {
-            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
-        } // try
-        return date;
-    }
-
-    String getDate() {
-
-        return getDate();
-    }
 
     private int getHeartsCount(String postId) {
 
@@ -290,7 +254,7 @@ public class MakePostService {
 
     private boolean getIsBookmarked(String postId, String currUserId) {
 
-        final String sqlString = "select * from bookmark where postId = " + postId;
+        final String sqlString = "select * from bookmark where postId = " + postId ;
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
@@ -310,7 +274,7 @@ public class MakePostService {
 
     public List<Comment> getComments(String postId) {
 
-        final String sqlString = "select * from comment where postId = " + postId;
+        final String sqlString = "select * from comment where postId = " + postId + " order by commentDate desc";
 
         List<Comment> comments = new ArrayList<>();
 
@@ -554,7 +518,7 @@ public class MakePostService {
 
         for (String postId : postIds) {
 
-            final String sqlString = "select * from post where postId = " + postId;
+            final String sqlString = "select * from post where postId = " + postId + " order by postDate desc";
 
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
@@ -594,7 +558,7 @@ public class MakePostService {
     public List<Post> getPostsFromBookmark() {
         List<Post> posts = new ArrayList<>();
 
-        final String sqlString = "select * from post";
+        final String sqlString = "select * from post order by postDate desc";
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
@@ -631,4 +595,51 @@ public class MakePostService {
 
         return posts;
     } // getPostsFromBookmark
+
+
+    /* 
+     * Once this function is working, go to HomeController.java and change line
+     * List<Post> posts = makePostService.getPosts(); (Line 61)
+    public List<Post> getPostsFollower(String user) {
+        List<Post> posts = new ArrayList<>();
+
+        final String sqlString = "select * from post where userId = " + user + " order by postDate desc";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                while (rs.next()) {
+                    String currPostId = rs.getString("postId");
+                    String currUserId = rs.getString("userId");
+                    String currPostText = rs.getString("postText");
+                    String currPostDate = rs.getString("postDate");
+
+                    User currUser = userService.getUserById(currUserId);
+
+                    int heartsCount = getHeartsCount(currPostId);
+                    int commentsCount = getCommentsCount(currPostId);
+                    boolean isHearted = getIsHearted(currPostId, currUserId);
+                    boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+
+                    Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
+                            isHearted, isBookmarked);
+                
+                    if(user.followableUsers().isFollowed()) {
+                        posts.add(post);
+                    }
+                    
+
+                } // while
+
+            }
+
+        } catch (SQLException sqle) {
+            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+        } // try
+
+        return posts;
+    } // getPostsFollower
+    */
 }
+

@@ -133,6 +133,8 @@ public class UserService {
 
     public User getUserById(String id) {
 
+        
+
         if (this.getLoggedInUser().getUserId().equals(id)) {
             return this.getLoggedInUser();
         }

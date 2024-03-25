@@ -301,11 +301,13 @@ public class MakePostService {
 
 			while (rs.next()) {
 				String currContent = rs.getString("commentText");
-				String currDate = rs.getString("commentDate");
 				String currUserId = rs.getString("userId");
+				String dbDateTime = rs.getString("commentDate");
+				LocalDateTime dateTime = LocalDateTime.parse(dbDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+				String formattedDate = dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a"));
 				User currUser = userService.getUserById(currUserId);
 				// postId, content, date, user
-				Comment currComment = new Comment(postId, currContent, currDate, currUser);
+				Comment currComment = new Comment(postId, currContent, formattedDate, currUser);
 				comments.add(currComment);
 			}
 
@@ -323,7 +325,7 @@ public class MakePostService {
 
 		String userId = userService.getLoggedInUser().getUserId();
 
-		SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy, hh:mm a");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date currentDate = new Date();
 		String formattedDate = sdf.format(currentDate);
 

@@ -106,7 +106,7 @@ public class PeopleController {
         System.out.println("\tuserId: " + userId);
         System.out.println("\tisFollow: " + isFollow);
 
-        boolean success = peopleService.handleFollow(userId, isFollow);
+        boolean success = peopleService.handleFollow(userId, isFollow); 
 
         if (success) {
             return "redirect:/people";

@@ -21,7 +21,7 @@ create table if not exists user (
 create table if not exists post (
     postId int auto_increment,
     userId int not null,
-    postDate varchar(255) not null,
+    postDate datetime not null,
     postText varchar(8000) not null,
     primary key (postId),
     foreign key (userId) references user(userId)

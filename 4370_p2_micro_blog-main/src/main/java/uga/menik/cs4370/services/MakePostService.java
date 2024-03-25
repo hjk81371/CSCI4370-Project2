@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -42,7 +44,7 @@ public class MakePostService {
 		String userId = user.getUserId();
 
 		// Get current data and time
-		SimpleDateFormat sdf = new SimpleDateFormat("MM dd, yyyy, hh:mm a");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date currentDate = new Date();
 		String formattedDate = sdf.format(currentDate);
 
@@ -133,16 +135,21 @@ public class MakePostService {
 					String currPostId = rs.getString("postId");
 					String currUserId = rs.getString("userId");
 					String currPostText = rs.getString("postText");
-					String currPostDate = rs.getString("postDate");
+					String dbDateTime = rs.getString("postDate");
+
+        
+        			LocalDateTime dateTime = LocalDateTime.parse(dbDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        
+        			String formattedDate = dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a"));
 
 					User currUser = userService.getUserById(currUserId);
 
 					int heartsCount = getHeartsCount(currPostId);
 					int commentsCount = getCommentsCount(currPostId);
-					boolean isHearted = getIsHearted(currPostId, currUserId);
-					boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+					boolean isHearted = getIsHearted(currPostId);
+					boolean isBookmarked = getIsBookmarked(currPostId);
 
-					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
+					Post post = new Post(currPostId, currPostText, formattedDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);
 					posts.add(post);
 				} // while
@@ -175,8 +182,8 @@ public class MakePostService {
 
 					int heartsCount = getHeartsCount(currPostId);
 					int commentsCount = getCommentsCount(currPostId);
-					boolean isHearted = getIsHearted(currPostId, currUserId);
-					boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+					boolean isHearted = getIsHearted(currPostId);
+					boolean isBookmarked = getIsBookmarked(currPostId);
 
 					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);
@@ -232,16 +239,19 @@ public class MakePostService {
 		}
 	} // getCommentsCount
 
-	private boolean getIsHearted(String postId, String currUserId) {
+	private boolean getIsHearted(String postId) {
 
 		final String sqlString = "select * from heart where postId = " + postId;
+
+		String loggedInUserId = userService.getLoggedInUser().getUserId();
+		System.out.println("isHearted UserId: " + loggedInUserId);
 
 		try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
 			ResultSet rs = pstmt.executeQuery();
 			while (rs.next()) {
 				String currId = rs.getString("userId");
-				if (currId.equals(currUserId)) {
+				if (currId.equals(loggedInUserId)) {
 					return true;
 				}
 			}
@@ -252,16 +262,19 @@ public class MakePostService {
 		}
 	} // getIsHearted
 
-	private boolean getIsBookmarked(String postId, String currUserId) {
+	private boolean getIsBookmarked(String postId) {
 
-		final String sqlString = "select * from bookmark where postId = " + postId ;
+		final String sqlString = "select * from bookmark where postId = " + postId;
+
+		String loggedInUserId = userService.getLoggedInUser().getUserId();
+		System.out.println("isBookmarked UserId: " + loggedInUserId);
 
 		try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
 
 			ResultSet rs = pstmt.executeQuery();
 			while (rs.next()) {
 				String currId = rs.getString("userId");
-				if (currId.equals(currUserId)) {
+				if (currId.equals(loggedInUserId)) {
 					return true;
 				}
 			}
@@ -338,9 +351,9 @@ public class MakePostService {
 
 		User currUser = userService.getLoggedInUser();
 
-		boolean currIsHearted = getIsHearted(postId, currUser.getUserId());
+		boolean currIsHearted = getIsHearted(postId);
 
-		boolean currIsBookmarked = getIsBookmarked(postId, currUser.getUserId());
+		boolean currIsBookmarked = getIsBookmarked(postId);
 
 		int currHeartCount = getHeartsCount(postId);
 
@@ -356,28 +369,39 @@ public class MakePostService {
 					String currPostDate = rs.getString("postDate");
 					String currPostText = rs.getString("postText");
 					String userId = rs.getString("userId");
+					System.out.println("before getUser");
 					User postUser = userService.getUserById(userId);
+					System.out.println("after getUser");
 					ExpandedPost expandedPost = new ExpandedPost(postId, currPostText, currPostDate, postUser,
 							currHeartCount, currCommentCount, currIsHearted, currIsBookmarked, currComments);
 					return List.of(expandedPost);
 				}
+				return null;
+			} catch (SQLException e) {
+				System.out.println("ERROR IN FIRST TRY");
+				e.printStackTrace();
 				return null;
 			}
 
 		} catch (SQLException sqle) {
 			System.err.println("SQL EXCEPTIONL " + sqle.getMessage());
 			return null;
-		}
+		} 
 	}
 
 	public boolean handleHeart(String postId, boolean isHeart) {
 
-		if (isHeart) {
+		String userId = userService.getLoggedInUser().getUserId();
+
+		boolean isHeart2 = getIsHearted(postId);
+
+		System.out.println("HEART2: " + isHeart2);
+
+		if (!isHeart2) {
 			// liking the post
 
 			final String sqlString = "insert into heart (postId, userId) values (?, ?)";
 
-			String userId = userService.getLoggedInUser().getUserId();
 
 			try (Connection conn = dataSource.getConnection();
 					PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
@@ -402,8 +426,6 @@ public class MakePostService {
 			// unliking the post
 
 			final String sqlString = "delete from heart where postId = ? and userId = ?";
-
-			String userId = userService.getLoggedInUser().getUserId();
 
 			try (Connection conn = dataSource.getConnection();
 					PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
@@ -430,7 +452,9 @@ public class MakePostService {
 
 	public boolean handleBookmark(String postId, boolean isBookmark) {
 
-		if (isBookmark) {
+		boolean isBookmarked2 = getIsBookmarked(postId);
+
+		if (!isBookmarked2) {
 			// liking the post
 
 			final String sqlString = "insert into bookmark (postId, userId) values (?, ?)";
@@ -527,8 +551,8 @@ public class MakePostService {
 	
 				int heartsCount = getHeartsCount(currPostId);
 				int commentsCount = getCommentsCount(currPostId);
-				boolean isHearted = getIsHearted(currPostId, currUserId);
-				boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+				boolean isHearted = getIsHearted(currPostId);
+				boolean isBookmarked = getIsBookmarked(currPostId);
 	
 				Post post = new Post(currPostId, currPostText, currPostDate, currUser,
 					heartsCount, commentsCount, isHearted, isBookmarked);
@@ -563,8 +587,8 @@ public class MakePostService {
 
 					int heartsCount = getHeartsCount(currPostId);
 					int commentsCount = getCommentsCount(currPostId);
-					boolean isHearted = getIsHearted(currPostId, currUserId);
-					boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+					boolean isHearted = getIsHearted(currPostId);
+					boolean isBookmarked = getIsBookmarked(currPostId);
 
 					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);
@@ -609,8 +633,8 @@ public class MakePostService {
 
 					int heartsCount = getHeartsCount(currPostId);
 					int commentsCount = getCommentsCount(currPostId);
-					boolean isHearted = getIsHearted(currPostId, currUserId);
-					boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+					boolean isHearted = getIsHearted(currPostId);
+					boolean isBookmarked = getIsBookmarked(currPostId);
 
 					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);

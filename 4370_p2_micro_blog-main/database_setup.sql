@@ -31,7 +31,7 @@ create table if not exists comment (
     commentId int auto_increment,
     postId int not null,
     userId int not null,
-    commentDate varchar(255) not null,
+    commentDate datetime not null,
     commentText varchar(8000),
     primary key (commentId),
     foreign key (postId) references post(postId),

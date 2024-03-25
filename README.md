@@ -19,4 +19,4 @@ To run this project:
 |Brandon Barth | brb60647 | Worked collaboratively on Hashtag Search, Bookmarks Page, Profile Page, and Helped with Properly ordering |
 |Harrison Kiersten | Something | Did something |
 | Nate Kite | Yes | I don't know yet |
-| Daniel Mora | Uh huh | Genius Mastermind that did nothing |
+| Daniel Mora | dam58925 | Helped work on Hashtag Search, Bookmarks Page, Profile Page, and Ordering Posts by dates |

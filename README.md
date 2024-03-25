@@ -16,7 +16,7 @@ To run this project:
 
 | Name | UserID | Contribution |
 | ------------- | ------------- | ------------- |
-|Brandon Barth | brb60647 | Worked collaboratively on Hashtag Search, Bookmarks Page, Profile Page, and Helped with Properly ordering |
-|Harrison Kiersten | Something | Did something |
+| Brandon Barth | brb60647 | Worked collaboratively on Hashtag Search, Bookmarks Page, Profile Page, and Helped with Properly ordering |
+| Harrison Kirstein | hjk81371 | Implemented post, comment, like, bookmark, hashtag and helped with hashtag search and sorting by date |
 | Nate Kite | nrk67593 | Helped write the hashtag search, home page, and tested and debug |
 | Daniel Mora | dam58925 | Helped work on Hashtag Search, Bookmarks Page, Profile Page, and Ordering Posts by dates |

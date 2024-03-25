@@ -18,5 +18,5 @@ To run this project:
 | ------------- | ------------- | ------------- |
 |Brandon Barth | brb60647 | Worked collaboratively on Hashtag Search, Bookmarks Page, Profile Page, and Helped with Properly ordering |
 |Harrison Kiersten | Something | Did something |
-| Nate Kite | Yes | I don't know yet |
+| Nate Kite | nrk67593 | Helped write the hashtag search, home page, and tested and debug |
 | Daniel Mora | Uh huh | Genius Mastermind that did nothing |

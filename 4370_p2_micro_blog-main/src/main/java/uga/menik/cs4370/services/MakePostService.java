@@ -17,6 +17,7 @@ import javax.sql.DataSource;
 import java.sql.Statement;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.support.xml.SqlXmlFeatureNotImplementedException;
 import org.springframework.stereotype.Service;
 
 import uga.menik.cs4370.models.Comment;
@@ -139,8 +140,8 @@ public class MakePostService {
 
 					int heartsCount = getHeartsCount(currPostId);
 					int commentsCount = getCommentsCount(currPostId);
-					boolean isHearted = getIsHearted(currPostId, currUserId);
-					boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+					boolean isHearted = getIsHearted(currPostId);
+					boolean isBookmarked = getIsBookmarked(currPostId);
 
 					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);
@@ -175,8 +176,8 @@ public class MakePostService {
 
 					int heartsCount = getHeartsCount(currPostId);
 					int commentsCount = getCommentsCount(currPostId);
-					boolean isHearted = getIsHearted(currPostId, currUserId);
-					boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+					boolean isHearted = getIsHearted(currPostId);
+					boolean isBookmarked = getIsBookmarked(currPostId);
 
 					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);
@@ -232,42 +233,45 @@ public class MakePostService {
 		}
 	} // getCommentsCount
 
-	private boolean getIsHearted(String postId, String currUserId) {
+	private boolean getIsHearted(String postId) {
 
-		final String sqlString = "select * from heart where postId = " + postId;
+		final String sqlString = "SELECT * FROM heart WHERE postId = ? AND userId = ?";
 
-		try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+		try {
+			// Connect to database and prepare statement
+			Connection conn = dataSource.getConnection();
+			PreparedStatement pstmt = conn.prepareStatement(sqlString);
+
+			pstmt.setString(1, postId);
+			pstmt.setString(2, userService.getLoggedInUser().getUserId());
 
 			ResultSet rs = pstmt.executeQuery();
-			while (rs.next()) {
-				String currId = rs.getString("userId");
-				if (currId.equals(currUserId)) {
-					return true;
-				}
-			}
-			return false;
+
+			// Returns true if there is at least one result
+			return rs.next();
 		} catch (SQLException sqle) {
-			sqle.printStackTrace();
+			System.err.println("SQL EXCEPTION: " + sqle.getMessage());
 			return false;
 		}
 	} // getIsHearted
 
-	private boolean getIsBookmarked(String postId, String currUserId) {
+	private boolean getIsBookmarked(String postId) {
+		final String sqlString = "SELECT * FROM bookmark WHERE postId = ? AND userId = ?";
 
-		final String sqlString = "select * from bookmark where postId = " + postId ;
+		try {
+			// Connect to database and prepare statement
+			Connection conn = dataSource.getConnection();
+			PreparedStatement pstmt = conn.prepareStatement(sqlString);
 
-		try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+			pstmt.setString(1, postId);
+			pstmt.setString(2, userService.getLoggedInUser().getUserId());
 
 			ResultSet rs = pstmt.executeQuery();
-			while (rs.next()) {
-				String currId = rs.getString("userId");
-				if (currId.equals(currUserId)) {
-					return true;
-				}
-			}
-			return false;
+
+			// Returns true if there is at least one result
+			return rs.next();
 		} catch (SQLException sqle) {
-			sqle.printStackTrace();
+			System.err.println("SQL EXCEPTION: " + sqle.getMessage());
 			return false;
 		}
 	} // isBookmarked
@@ -334,38 +338,53 @@ public class MakePostService {
 
 	public List<ExpandedPost> getExpandedPost(String postId) {
 
-		final String sql = "select postId, postDate, postText, userId from post where postId = " + postId;
+		System.out.println("Checkpoint 1");
 
-		User currUser = userService.getLoggedInUser();
-
-		boolean currIsHearted = getIsHearted(postId, currUser.getUserId());
-
-		boolean currIsBookmarked = getIsBookmarked(postId, currUser.getUserId());
-
-		int currHeartCount = getHeartsCount(postId);
-
-		int currCommentCount = getCommentsCount(postId);
-
+		// Get info about post from helper methods
+		boolean isHearted = getIsHearted(postId);
+		boolean isBookmarked = getIsBookmarked(postId);
+		int heartCount = getHeartsCount(postId);
+		int commentCount = getCommentsCount(postId);
 		List<Comment> currComments = getComments(postId);
 
-		try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+		System.out.println("Checkpoint 2");
 
-			try (ResultSet rs = pstmt.executeQuery()) {
+		final String sqlString = "SELECT * FROM post, user WHERE postId = ? AND post.userId = user.userId";
 
-				while (rs.next()) {
-					String currPostDate = rs.getString("postDate");
-					String currPostText = rs.getString("postText");
-					String userId = rs.getString("userId");
-					User postUser = userService.getUserById(userId);
-					ExpandedPost expandedPost = new ExpandedPost(postId, currPostText, currPostDate, postUser,
-							currHeartCount, currCommentCount, currIsHearted, currIsBookmarked, currComments);
-					return List.of(expandedPost);
-				}
-				return null;
-			}
+		try {
+			// Connect to database and prepare query
+			Connection conn = dataSource.getConnection();
+			PreparedStatement pstmt = conn.prepareStatement(sqlString);
+			pstmt.setString(1, postId);
 
+			System.out.println("Checkpoint 3");
+
+			ResultSet rs = pstmt.executeQuery();
+			rs.next();
+
+			System.out.println("Checkpoint 4");
+
+			String postDate = rs.getString("postDate");
+			String postText = rs.getString("postText");
+			String userId = rs.getString("userId");
+
+			System.out.println("Checkpoint 4.1");
+			System.out.println("userId: " + userId);
+
+			// User postUser = userService.getUserById(userId);
+
+			User postUser = new User(rs.getString("userId"), rs.getString("firstName"), rs.getString("lastName"));
+
+			System.out.println("Checkpoint 4.2");
+
+			ExpandedPost expandedPost = new ExpandedPost(postId, postText, postDate, postUser,
+				heartCount, commentCount, isHearted, isBookmarked, currComments);
+
+			System.out.println("Checkpoint 5");
+			
+			return List.of(expandedPost);
 		} catch (SQLException sqle) {
-			System.err.println("SQL EXCEPTIONL " + sqle.getMessage());
+			System.err.println("SQL EXCEPTION: " + sqle.getMessage());
 			return null;
 		}
 	}
@@ -527,8 +546,8 @@ public class MakePostService {
 	
 				int heartsCount = getHeartsCount(currPostId);
 				int commentsCount = getCommentsCount(currPostId);
-				boolean isHearted = getIsHearted(currPostId, currUserId);
-				boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+				boolean isHearted = getIsHearted(currPostId);
+				boolean isBookmarked = getIsBookmarked(currPostId);
 	
 				Post post = new Post(currPostId, currPostText, currPostDate, currUser,
 					heartsCount, commentsCount, isHearted, isBookmarked);
@@ -563,8 +582,8 @@ public class MakePostService {
 
 					int heartsCount = getHeartsCount(currPostId);
 					int commentsCount = getCommentsCount(currPostId);
-					boolean isHearted = getIsHearted(currPostId, currUserId);
-					boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+					boolean isHearted = getIsHearted(currPostId);
+					boolean isBookmarked = getIsBookmarked(currPostId);
 
 					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);
@@ -609,8 +628,8 @@ public class MakePostService {
 
 					int heartsCount = getHeartsCount(currPostId);
 					int commentsCount = getCommentsCount(currPostId);
-					boolean isHearted = getIsHearted(currPostId, currUserId);
-					boolean isBookmarked = getIsBookmarked(currPostId, currUserId);
+					boolean isHearted = getIsHearted(currPostId);
+					boolean isBookmarked = getIsBookmarked(currPostId);
 
 					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);

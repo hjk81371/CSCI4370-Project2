@@ -134,9 +134,12 @@ public class UserService {
     public User getUserById(String id) {
         User user = null;
 
-        final String sqlString = "select * from user where userId = " + id;
+        // final String sqlString = "select * from user where userId = " + id;
+        final String sqlString = "select * from user where userId = ?";
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+            pstmt.setString(1, id);
 
             try (ResultSet rs = pstmt.executeQuery()) {
 

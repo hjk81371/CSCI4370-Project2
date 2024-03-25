@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,13 +61,12 @@ public class PeopleService {
 
                 while (rs.next()) {
                     String currUserId = rs.getString("userId");
-                    // String currRowUsername = rs.getString("Username");
                     String currRowFirstName = rs.getString("firstName");
                     String currRowLastName = rs.getString("lastName");
                     boolean isFollowed = getIsFollowed(userIdToExclude, currUserId);
-                    // get Last Post time from user
+                    String lastPostedDate = getLastPostedDate(currUserId);
                    
-                    FollowableUser currFollowableUser = new FollowableUser(currUserId, currRowFirstName, currRowLastName, isFollowed, "date");//"Mar 07, 2024, 10:54 PM"); //currPostDate); 
+                    FollowableUser currFollowableUser = new FollowableUser(currUserId, currRowFirstName, currRowLastName, isFollowed, lastPostedDate);//"Mar 07, 2024, 10:54 PM"); //currPostDate); 
                     followableUserList.add(currFollowableUser);
                 } // while
 
@@ -84,6 +85,35 @@ public class PeopleService {
         // Replace the following line and return the list you created.
         return followableUserList;
     }
+
+    private String getLastPostedDate(String userId) {
+        final String sqlString = "SELECT min(postDate) AS latest_post FROM post WHERE userId = ?";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sqlString)) {
+
+
+            pstmt.setString(1, userId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                while (rs.next()) {
+                    System.out.println("DATE USERID: " + userId);
+                    String dbDateTime = rs.getString("latest_post");
+                    if (dbDateTime == null) {
+                        return "N/A";
+                    } else {
+                        LocalDateTime dateTime = LocalDateTime.parse(dbDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                        String formattedDate = dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a"));
+                        return formattedDate;                   
+                    }
+                } // while
+                return "N/A";
+            }
+        } catch (SQLException sqle) {
+            System.err.println("SQL EXCEPTION this_one: " + sqle.getMessage());
+            return "N/A";
+        } // try
+    } // getIsFollowed
 
     private boolean getIsFollowed(String currUserId, String otherUserId) {
         final String sqlString = "select * from follow where followerUserId = ? and followeeUserId = ?";

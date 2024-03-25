@@ -132,6 +132,11 @@ public class UserService {
     }
 
     public User getUserById(String id) {
+
+        if (this.getLoggedInUser().getUserId().equals(id)) {
+            return this.getLoggedInUser();
+        }
+
         User user = null;
 
         final String sqlString = "select * from user where userId = " + id;
@@ -150,7 +155,7 @@ public class UserService {
             }
 
         } catch (SQLException sqle) {
-            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+            System.err.println("SQL EXCEPTION 16: " + sqle.getMessage());
             return user;
         } // try
     }

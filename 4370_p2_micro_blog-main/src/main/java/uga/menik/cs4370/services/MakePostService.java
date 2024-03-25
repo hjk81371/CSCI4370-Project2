@@ -157,7 +157,7 @@ public class MakePostService {
 			}
 
 		} catch (SQLException sqle) {
-			System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+			System.err.println("SQL EXCEPTION 1: " + sqle.getMessage());
 		} // try
 
 		return posts;
@@ -176,8 +176,12 @@ public class MakePostService {
 					String currPostId = rs.getString("postId");
 					String currUserId = rs.getString("userId");
 					String currPostText = rs.getString("postText");
-					String currPostDate = rs.getString("postDate");
+					String dbDateTime = rs.getString("postDate");
 
+        
+        			LocalDateTime dateTime = LocalDateTime.parse(dbDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        
+        			String formattedDate = dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a"));
 					User currUser = userService.getUserById(currUserId);
 
 					int heartsCount = getHeartsCount(currPostId);
@@ -185,7 +189,7 @@ public class MakePostService {
 					boolean isHearted = getIsHearted(currPostId);
 					boolean isBookmarked = getIsBookmarked(currPostId);
 
-					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
+					Post post = new Post(currPostId, currPostText, formattedDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);
 					posts.add(post);
 				} // while
@@ -193,7 +197,7 @@ public class MakePostService {
 			}
 
 		} catch (SQLException sqle) {
-			System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+			System.err.println("SQL EXCEPTION 2: " + sqle.getMessage());
 		} // try
 
 		return posts;
@@ -339,7 +343,7 @@ public class MakePostService {
 			}
 
 		} catch (SQLException sqle) {
-			System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+			System.err.println("SQL EXCEPTION 3: " + sqle.getMessage());
 			return false;
 		} // try
 
@@ -366,13 +370,17 @@ public class MakePostService {
 			try (ResultSet rs = pstmt.executeQuery()) {
 
 				while (rs.next()) {
-					String currPostDate = rs.getString("postDate");
-					String currPostText = rs.getString("postText");
+					String dbDateTime = rs.getString("postDate");
+
+        
+        			LocalDateTime dateTime = LocalDateTime.parse(dbDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        
+        			String formattedDate = dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a"));					String currPostText = rs.getString("postText");
 					String userId = rs.getString("userId");
 					System.out.println("before getUser");
 					User postUser = userService.getUserById(userId);
 					System.out.println("after getUser");
-					ExpandedPost expandedPost = new ExpandedPost(postId, currPostText, currPostDate, postUser,
+					ExpandedPost expandedPost = new ExpandedPost(postId, currPostText, formattedDate, postUser,
 							currHeartCount, currCommentCount, currIsHearted, currIsBookmarked, currComments);
 					return List.of(expandedPost);
 				}
@@ -384,7 +392,7 @@ public class MakePostService {
 			}
 
 		} catch (SQLException sqle) {
-			System.err.println("SQL EXCEPTIONL " + sqle.getMessage());
+			System.err.println("SQL EXCEPTION 4: " + sqle.getMessage());
 			return null;
 		} 
 	}
@@ -418,7 +426,7 @@ public class MakePostService {
 				}
 
 			} catch (SQLException sqle) {
-				System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+				System.err.println("SQL EXCEPTION 5: " + sqle.getMessage());
 				return false;
 			} // try
 
@@ -442,7 +450,7 @@ public class MakePostService {
 				}
 
 			} catch (SQLException sqle) {
-				System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+				System.err.println("SQL EXCEPTION 6: " + sqle.getMessage());
 				return false;
 			} // try
 
@@ -476,7 +484,7 @@ public class MakePostService {
 				}
 
 			} catch (SQLException sqle) {
-				System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+				System.err.println("SQL EXCEPTION 7: " + sqle.getMessage());
 				return false;
 			} // try
 
@@ -502,7 +510,7 @@ public class MakePostService {
 				}
 
 			} catch (SQLException sqle) {
-				System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+				System.err.println("SQL EXCEPTION 8: " + sqle.getMessage());
 				return false;
 			} // try
 
@@ -545,8 +553,12 @@ public class MakePostService {
 				String currPostId = rs.getString("postId");
 				String currUserId = rs.getString("userId");
 				String currPostText = rs.getString("postText");
-				String currPostDate = rs.getString("postDate");
+				String dbDateTime = rs.getString("postDate");
+
+        
+				LocalDateTime dateTime = LocalDateTime.parse(dbDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 	
+				String formattedDate = dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a"));	
 				User currUser = userService.getUserById(currUserId);
 	
 				int heartsCount = getHeartsCount(currPostId);
@@ -554,7 +566,7 @@ public class MakePostService {
 				boolean isHearted = getIsHearted(currPostId);
 				boolean isBookmarked = getIsBookmarked(currPostId);
 	
-				Post post = new Post(currPostId, currPostText, currPostDate, currUser,
+				Post post = new Post(currPostId, currPostText, formattedDate, currUser,
 					heartsCount, commentsCount, isHearted, isBookmarked);
 				// TODO: Figure out what this means:
 				// if bookmarked add post otherwise do nothing
@@ -562,7 +574,7 @@ public class MakePostService {
 			}
 
 		} catch (SQLException sqle) {
-			System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+			System.err.println("SQL EXCEPTION 9: " + sqle.getMessage());
 		}
 
 		return posts;
@@ -581,8 +593,12 @@ public class MakePostService {
 					String currPostId = rs.getString("postId");
 					String currUserId = rs.getString("userId");
 					String currPostText = rs.getString("postText");
-					String currPostDate = rs.getString("postDate");
+					String dbDateTime = rs.getString("postDate");
 
+        
+        			LocalDateTime dateTime = LocalDateTime.parse(dbDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        
+        			String formattedDate = dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a"));
 					User currUser = userService.getUserById(currUserId);
 
 					int heartsCount = getHeartsCount(currPostId);
@@ -590,7 +606,7 @@ public class MakePostService {
 					boolean isHearted = getIsHearted(currPostId);
 					boolean isBookmarked = getIsBookmarked(currPostId);
 
-					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
+					Post post = new Post(currPostId, currPostText, formattedDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);
 				
 					if(post.isBookmarked() == true) {
@@ -603,7 +619,7 @@ public class MakePostService {
 			}
 
 		} catch (SQLException sqle) {
-			System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+			System.err.println("SQL EXCEPTION 10: " + sqle.getMessage());
 		} // try
 
 		return posts;
@@ -627,8 +643,12 @@ public class MakePostService {
 					String currPostId = rs.getString("postId");
 					String currUserId = rs.getString("userId");
 					String currPostText = rs.getString("postText");
-					String currPostDate = rs.getString("postDate");
+					String dbDateTime = rs.getString("postDate");
 
+        
+        			LocalDateTime dateTime = LocalDateTime.parse(dbDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        
+        			String formattedDate = dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a"));
 					User currUser = userService.getUserById(currUserId);
 
 					int heartsCount = getHeartsCount(currPostId);
@@ -636,7 +656,7 @@ public class MakePostService {
 					boolean isHearted = getIsHearted(currPostId);
 					boolean isBookmarked = getIsBookmarked(currPostId);
 
-					Post post = new Post(currPostId, currPostText, currPostDate, currUser, heartsCount, commentsCount,
+					Post post = new Post(currPostId, currPostText, formattedDate, currUser, heartsCount, commentsCount,
 							isHearted, isBookmarked);
 				
 					posts.add(post);
@@ -645,7 +665,7 @@ public class MakePostService {
 			}
 
 		} catch (SQLException sqle) {
-			System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+			System.err.println("SQL EXCEPTION 11: " + sqle.getMessage());
 		} // try
 
 		return posts;

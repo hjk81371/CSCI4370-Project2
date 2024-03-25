@@ -72,7 +72,7 @@ public class PeopleService {
             }
 
         } catch (SQLException sqle) {
-            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+            System.err.println("SQL EXCEPTION 12: " + sqle.getMessage());
         } // try
 
         // Use the query result to create a list of followable users.
@@ -101,7 +101,7 @@ public class PeopleService {
                 return false;
             }
         } catch (SQLException sqle) {
-            System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+            System.err.println("SQL EXCEPTION 13: " + sqle.getMessage());
             return false;
         } // try
     } // getIsFollowed
@@ -133,7 +133,7 @@ public class PeopleService {
                 }
 
             } catch (SQLException sqle) {
-                System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+                System.err.println("SQL EXCEPTION 14: " + sqle.getMessage());
                 return false;
             } // try
 
@@ -157,7 +157,7 @@ public class PeopleService {
                 }
 
             } catch (SQLException sqle) {
-                System.err.println("SQL EXCEPTION: " + sqle.getMessage());
+                System.err.println("SQL EXCEPTION 15: " + sqle.getMessage());
                 return false;
             } // try
 
